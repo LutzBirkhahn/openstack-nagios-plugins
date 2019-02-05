@@ -88,8 +88,14 @@ class CeilometerStatistics(osnag.Resource):
         for t in teste :
            period_end=self.tzone.localize(datetime.datetime.strptime(getattr(t,'period_end','')[:19],date_format))
            age = now - period_end
+           totalseconds = age.total_seconds()
+           if (totalseconds < 0) and (totalseconds > -10):
+              # allow period_end to be max. 10 seconds in the "future" (after "now")
+              totalseconds = 0
+              age = datetime.timedelta(seconds=0)
+
            yield osnag.Metric('count', getattr(t,'count',''),uom='samples')
-           yield osnag.Metric('age', age.total_seconds()/60, uom='m' )
+           yield osnag.Metric('age', totalseconds/60, uom='m' )
            yield osnag.Metric('value', getattr(t,self.aggregate,''),
                                min=getattr(t,'min',''),
                                max=getattr(t,'max',''),

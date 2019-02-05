@@ -1,6 +1,11 @@
 openstack-nagios-plugins
 ========================
 
+noris information:
+- package python-openstacknagios for installation on osmon01vp
+- do not use for checks on monitor2 (they are in repo oci/noris-nagios-openstackplugins-monitor2)
+- do not use for checks on control nodes or hypervisors (they are in repo oci/noris-nagios-openstackplugins)
+
 Nagios/icinga plugins to monitor an openstack installation.
 
 Find also some information about these plugins in the talk

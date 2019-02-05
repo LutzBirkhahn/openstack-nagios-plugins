@@ -4,3 +4,5 @@ openstacknagios.egg-info
 dist
 build
 Makefile
+.project
+.pydevproject
