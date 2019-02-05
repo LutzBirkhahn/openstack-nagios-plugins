@@ -23,6 +23,9 @@ from nagiosplugin import Metric
 from nagiosplugin import guarded
 from nagiosplugin import ScalarContext
 
+from keystoneauth1 import loading
+from keystoneauth1 import session
+
 from argparse import ArgumentParser    as ArgArgumentParser
 
 from os import environ as env
@@ -40,7 +43,7 @@ class Resource(NagiosResource):
 
     def get_openstack_vars(self,args=None):
 
-       os_vars = dict(username='', password='',tenant_name='',auth_url='', cacert='')
+       os_vars = dict(username='', password='',project_name='',auth_url='', cacert='', user_domain_name='', project_domain_name='')
 
        if args.filename:
           config = ConfigParser.RawConfigParser()
@@ -58,12 +61,29 @@ class Resource(NagiosResource):
        else:
           try: 
             for r in os_vars.keys():
-               os_vars[r]    = env['OS_' + r.upper()]
+               try:
+                 os_vars[r]    = env['OS_' + r.upper()]
+               except:
+                 os_vars[r]    = None
           except Exception as e:
             self.exit_error('missing environment variable ' + str(e))
 
        os_vars['insecure']=args.insecure
        return os_vars
+
+    def get_session(self):
+       loader = loading.get_plugin_loader('password')
+       auth = loader.load_from_options(auth_url            = self.openstack['auth_url'],
+                                       username            = self.openstack['username'],
+                                       password            = self.openstack['password'],
+                                       project_name        = self.openstack['project_name'],
+                                       user_domain_name    = self.openstack['user_domain_name'],
+                                       project_domain_name = self.openstack['project_domain_name'],
+                                       )
+
+       return  session.Session(auth   = auth,
+                               verify = self.openstack['cacert'],
+               )
 
     def exit_error(self, text):
        print 'UNKNOWN - ' + text

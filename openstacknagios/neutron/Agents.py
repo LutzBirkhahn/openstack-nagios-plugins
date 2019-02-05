@@ -24,8 +24,6 @@
 import json
 import openstacknagios.openstacknagios as osnag
 
-import keystoneclient.v2_0.client as ksclient
-
 from neutronclient.neutron import client
 
 
@@ -43,25 +41,22 @@ class NeutronAgents(osnag.Resource):
 
     def probe(self):
         try:
-           keystone=ksclient.Client(username    = self.openstack['username'],
-                                    password    = self.openstack['password'],
-                                    tenant_name = self.openstack['tenant_name'],
-                                    auth_url    = self.openstack['auth_url'],
-                                    cacert      = self.openstack['cacert'],
-                                    insecure    = self.openstack['insecure'])
-        except Exception as e:
-           self.exit_error('cannot get token ' + str(e))
-         
-        try:
-           neutron = client.Client('2.0', endpoint_url = keystone.service_catalog.url_for(endpoint_type='public',service_type='network'),
-                                          token        = keystone.auth_token,
-                                          ca_cert      = self.openstack['cacert'],
-                                          insecure     = self.openstack['insecure'])
+           neutron = client.Client('2.0', 
+                                   session  = self.get_session(),
+                                   ca_cert  = self.openstack['cacert'],
+                                   insecure = self.openstack['insecure'])
         except Exception as e:
            self.exit_error('cannot load ' + str(e))
 
         try:
-           result=neutron.list_agents(host=self.host,binary=self.binary)
+           if self.host and self.binary:
+              result=neutron.list_agents(host=self.host,binary=self.binary)
+           elif self.binary:
+              result=neutron.list_agents(binary=self.binary)
+           elif self.host:
+              result=neutron.list_agents(host=self.host)
+           else:
+              result=neutron.list_agents()
         except Exception as e:
            self.exit_error(str(e))
 

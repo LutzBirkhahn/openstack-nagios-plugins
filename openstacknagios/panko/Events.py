@@ -16,19 +16,18 @@
 #  
 
 """
-    Nagios plugin to check running nova images.
-    This corresponds to the output of 'nova image-list'.
+    Nagios plugin to check panko events.
 """
 
 import time
 import openstacknagios.openstacknagios as osnag
 
-from novaclient.client import Client
+from pankoclient.v2.client import Client
 
 
-class NovaImages(osnag.Resource):
+class PankoEvents(osnag.Resource):
     """
-        Lists nova images and gets timing
+        Lists panko events
     """
 
     def __init__(self, args=None):
@@ -38,13 +37,10 @@ class NovaImages(osnag.Resource):
     def probe(self):
         start = time.time()
         try:
-            nova = Client('2', self.openstack['username'], 
-                          self.openstack['password'], 
-                          self.openstack['tenant_name'],
-                          auth_url=self.openstack['auth_url'],
-                          cacert=self.openstack['cacert'],
-                          insecure=self.openstack['insecure'])
-            nova.images.list()
+            panko = Client( 
+                            session = self.get_session(),
+                            )
+            #print panko.event.list()
         except Exception as e:
             self.exit_error(str(e))
 
@@ -65,7 +61,7 @@ def main():
     args = argp.parse_args()
 
     check = osnag.Check(
-        NovaImages(args=args),
+        PankoEvents(args=args),
         osnag.ScalarContext('gettime', args.warn, args.critical),
         osnag.Summary(show=['gettime'])
         )
